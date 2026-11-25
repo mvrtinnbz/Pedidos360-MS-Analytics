@@ -32,9 +32,8 @@ public class SecurityConfig {
                 )
             )
 
-            // Todas las peticiones requieren autenticacion
-            // (en la Fase 5 se abrira el dashboard WebSocket)
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/analytics/**", "/ws/**").permitAll()
                 .anyRequest().authenticated()
             )
 

@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
+import software.amazon.awssdk.services.dynamodb.model.ScanRequest;
+import java.util.List;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -90,5 +93,21 @@ public class MetricasRepository {
 
     private static AttributeValue numero(Long valor) {
         return AttributeValue.fromN(String.valueOf(valor));
+    }
+
+    // Interacciones de un usuario (consulta por clave de particion usuarioId)
+    public List<Map<String, AttributeValue>> interaccionesDeUsuario(String usuarioId) {
+        return dynamo.query(QueryRequest.builder()
+                .tableName(tablaInteracciones)
+                .keyConditionExpression("usuarioId = :u")
+                .expressionAttributeValues(Map.of(":u", AttributeValue.fromS(usuarioId)))
+                .build()).items();
+    }
+
+    // Totales de todos los productos (tabla chica: un scan alcanza)
+    public List<Map<String, AttributeValue>> totalesPorProducto() {
+        return dynamo.scan(ScanRequest.builder()
+                .tableName(tablaProductos)
+                .build()).items();
     }
 }
