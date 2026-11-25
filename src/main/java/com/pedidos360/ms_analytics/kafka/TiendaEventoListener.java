@@ -6,8 +6,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
+import com.pedidos360.ms_analytics.metricas.MetricasNotificador;
 
-// Consume el topico tienda.eventos (grupo "ms-analytics") y actualiza DynamoDB.
 @Component
 public class TiendaEventoListener {
 
@@ -17,16 +17,19 @@ public class TiendaEventoListener {
 
     private final JsonMapper jsonMapper;
     private final MetricasRepository metricasRepository;
+    private final MetricasNotificador notificador;
 
-    public TiendaEventoListener(JsonMapper jsonMapper, MetricasRepository metricasRepository) {
+    public TiendaEventoListener(JsonMapper jsonMapper,
+                                MetricasRepository metricasRepository,
+                                MetricasNotificador notificador) {
         this.jsonMapper = jsonMapper;
         this.metricasRepository = metricasRepository;
+        this.notificador = notificador;
     }
 
     @KafkaListener(topics = TOPICO)
     public void recibir(String mensaje) {
 
-        // try/catch: un mensaje malo se omite, no detiene el consumidor
         try {
             TiendaEvento evento = jsonMapper.readValue(mensaje, TiendaEvento.class);
 
@@ -36,6 +39,7 @@ public class TiendaEventoListener {
             }
 
             metricasRepository.registrar(evento);
+            notificador.marcarCambio();
 
             log.info("Kafka -> DynamoDB: {} producto {} (usuario {})",
                     evento.tipo(), evento.productoId(), evento.usuarioId());
